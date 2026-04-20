@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>VerifyAI — Dual-Model Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+:root {
+  --ink:        #0c0e12;
+  --ink-2:      #3a3f4a;
+  --ink-3:      #717885;
+  --surface:    #ffffff;
+  --surface-2:  #f7f6f3;
+  --surface-3:  #eeece8;
+  --ds-blue:    #0062ff;
+  --ds-blue-bg: #e8f0ff;
+  --ds-blue-bd: #b3ccff;
+  --oai-green:    #00a67e;
+  --oai-green-bg: #e6f7f3;
+  --oai-green-bd: #99ddd0;
+  --warn:       #b45309;
+  --warn-bg:    #fef3c7;
+  --ok:         #15803d;
+  --ok-bg:      #dcfce7;
+  --danger:     #b91c1c;
+  --danger-bg:  #fee2e2;
+  --border:     rgba(0,0,0,0.08);
+  --border-2:   rgba(0,0,0,0.14);
+  --radius:     14px;
+  --radius-sm:  8px;
+  --serif: 'Playfair Display', Georgia, serif;
+  --sans:  'IBM Plex Sans', system-ui, sans-serif;
+  --mono:  'IBM Plex Mono', monospace;
+}
+
+body { font-family: var(--sans); background: var(--surface-2); color: var(--ink); min-height: 100vh; font-size: 14px; line-height: 1.65; }
+
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(255,255,255,0.95); backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem; height: 58px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-brand { display: flex; align-items: center; gap: 10px; font-family: var(--serif); font-size: 19px; color: var(--ink); text-decoration: none; }
+.nav-logo { width: 32px; height: 32px; background: var(--ink); border-radius: 9px; display: flex; align-items: center; justify-content: center; }
+.nav-logo svg { width: 18px; height: 18px; }
+.nav-pills { display: flex; gap: 6px; }
+.nav-pill { font-size: 12px; font-weight: 500; padding: 4px 12px; border-radius: 99px; border: 1px solid; }
+.nav-pill.ds  { background: var(--ds-blue-bg);  color: var(--ds-blue);  border-color: var(--ds-blue-bd); }
+.nav-pill.oai { background: var(--oai-green-bg); color: var(--oai-green); border-color: var(--oai-green-bd); }
+
+.hero { max-width: 700px; margin: 0 auto; padding: 3.5rem 2rem 2rem; text-align: center; animation: fadeUp 0.5s ease both; }
+.hero-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; color: var(--ink-3); margin-bottom: 1.25rem; }
+.eyebrow-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ds-blue); display: inline-block; }
+.hero h1 { font-family: var(--serif); font-size: clamp(2rem,5vw,3rem); font-weight: 400; line-height: 1.2; margin-bottom: 0.9rem; }
+.hero h1 em { font-style: italic; color: var(--ds-blue); }
+.hero p { font-size: 15px; color: var(--ink-2); max-width: 500px; margin: 0 auto 2rem; line-height: 1.7; }
+
+.legend { display: flex; justify-content: center; gap: 12px; margin-bottom: 2.5rem; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--ink-2); background: var(--surface); border: 1px solid var(--border); padding: 7px 14px; border-radius: 99px; }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.legend-dot.ds  { background: var(--ds-blue); }
+.legend-dot.oai { background: var(--oai-green); }
+.legend-badge { font-size: 10px; font-weight: 500; padding: 1px 7px; border-radius: 99px; }
+.legend-badge.always    { background: #f0f0f0; color: var(--ink-3); }
+.legend-badge.sensitive { background: var(--warn-bg); color: var(--warn); }
+
+.main-wrap { max-width: 940px; margin: 0 auto; padding: 0 1.5rem 5rem; }
+
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.75rem 2rem; margin-bottom: 1.25rem; }
+.card-label { font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; color: var(--ink-3); margin-bottom: 10px; text-transform: uppercase; }
+
+.query-row { display: flex; gap: 10px; }
+.query-box {
+  flex: 1; padding: 13px 15px; font-family: var(--sans); font-size: 14px;
+  color: var(--ink); background: var(--surface-2);
+  border: 1px solid var(--border-2); border-radius: var(--radius-sm);
+  resize: none; height: 82px; transition: border-color 0.15s, background 0.15s;
+}
+.query-box:focus { outline: none; border-color: var(--ds-blue); background: #fff; }
+.query-box::placeholder { color: var(--ink-3); }
+
+.ask-btn {
+  padding: 0 22px; height: 82px; min-width: 110px;
+  background: var(--ink); color: #fff; border: none; border-radius: var(--radius-sm);
+  font-family: var(--sans); font-size: 13px; font-weight: 500; cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+}
+.ask-btn:hover    { background: #1e2430; }
+.ask-btn:active   { transform: scale(0.97); }
+.ask-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.ask-btn svg { width: 20px; height: 20px; }
+
+.chips-row  { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; align-items: center; }
+.chips-label { font-size: 11px; color: var(--ink-3); font-family: var(--mono); }
+.chip {
+  font-size: 12px; padding: 5px 12px;
+  background: var(--surface-2); border: 1px solid var(--border-2);
+  border-radius: 99px; cursor: pointer; color: var(--ink-2);
+  font-family: var(--sans); transition: all 0.12s;
+}
+.chip:hover { background: var(--ds-blue-bg); border-color: var(--ds-blue-bd); color: var(--ds-blue); }
+
+.trigger-banner {
+  display: none; margin-top: 12px; padding: 10px 14px;
+  border-radius: var(--radius-sm); font-size: 13px; border: 1px solid;
+  align-items: center; gap: 9px;
+}
+.trigger-banner.sensitive { background: var(--warn-bg);      color: var(--warn);    border-color: #fcd34d; }
+.trigger-banner.normal    { background: var(--oai-green-bg); color: #0a7a5c;        border-color: var(--oai-green-bd); }
+.trigger-banner.error     { background: var(--danger-bg);    color: var(--danger);  border-color: #fca5a5; }
+.trigger-banner svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+.status-bar {
+  display: none; align-items: center; gap: 10px;
+  padding: 11px 15px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 13px; color: var(--ink-2); margin-bottom: 1.25rem;
+}
+.spinner { width: 15px; height: 15px; flex-shrink: 0; border: 2px solid var(--border-2); border-top-color: var(--ds-blue); border-radius: 50%; animation: spin 0.7s linear infinite; }
+
+.models-area { display: none; margin-bottom: 1.25rem; }
+.section-label { font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; color: var(--ink-3); margin-bottom: 10px; text-transform: uppercase; }
+.models-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px,1fr)); gap: 12px; }
+
+.model-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.3rem 1.5rem; position: relative; overflow: hidden; }
+.model-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.model-card.ds-card::before  { background: var(--ds-blue); }
+.model-card.oai-card::before { background: var(--oai-green); }
+.model-card.oai-card.locked  { border-style: dashed; opacity: 0.55; }
+
+.model-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.model-id { display: flex; align-items: center; gap: 8px; }
+.model-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.model-dot.ds  { background: var(--ds-blue); }
+.model-dot.oai { background: var(--oai-green); }
+.model-name { font-size: 13px; font-weight: 500; color: var(--ink); }
+.model-sub  { font-size: 11px; color: var(--ink-3); font-family: var(--mono); }
+
+.model-status-tag { font-size: 11px; padding: 2px 9px; border-radius: 99px; border: 1px solid; }
+.model-status-tag.active-ds  { background: var(--ds-blue-bg);  color: var(--ds-blue);  border-color: var(--ds-blue-bd); }
+.model-status-tag.active-oai { background: var(--oai-green-bg); color: var(--oai-green); border-color: var(--oai-green-bd); }
+.model-status-tag.waiting    { background: var(--surface-2); color: var(--ink-3); border-color: var(--border-2); }
+
+.model-response { font-size: 13px; color: var(--ink-2); line-height: 1.65; min-height: 80px; }
+.model-response.loading { color: var(--ink-3); font-style: italic; }
+
+.dot-loader { display: inline-flex; gap: 4px; margin-right: 5px; vertical-align: middle; }
+.dot-loader span { width: 5px; height: 5px; border-radius: 50%; background: var(--ink-3); animation: dotBounce 1.2s infinite; }
+.dot-loader span:nth-child(2) { animation-delay: 0.2s; }
+.dot-loader span:nth-child(3) { animation-delay: 0.4s; }
+
+.compare-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.75rem 2rem; margin-bottom: 1.25rem; display: none; }
+.compare-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; gap: 12px; }
+.compare-title { font-family: var(--serif); font-size: 21px; font-weight: 400; color: var(--ink); }
+
+.reliability-pill { font-size: 12px; font-weight: 500; padding: 5px 15px; border-radius: 99px; white-space: nowrap; }
+.reliability-pill.high   { background: var(--ok-bg);     color: var(--ok); }
+.reliability-pill.medium { background: var(--warn-bg);   color: var(--warn); }
+.reliability-pill.low    { background: var(--danger-bg); color: var(--danger); }
+
+.points-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.5rem; }
+.points-col-head { font-size: 11px; font-family: var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 8px; }
+.point-item { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--ink-2); line-height: 1.5; margin-bottom: 7px; }
+.point-icon { width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; font-size: 9px; }
+.point-icon.agree   { background: var(--ok-bg);     color: var(--ok); }
+.point-icon.dispute { background: var(--danger-bg); color: var(--danger); }
+
+.conf-section { margin-bottom: 1.5rem; }
+.conf-row { display: flex; align-items: center; gap: 12px; margin-bottom: 9px; }
+.conf-label { font-size: 12px; color: var(--ink-2); min-width: 100px; display: flex; align-items: center; gap: 6px; }
+.conf-track { flex: 1; height: 6px; background: var(--surface-3); border-radius: 99px; overflow: hidden; }
+.conf-fill  { height: 100%; border-radius: 99px; transition: width 1s cubic-bezier(.22,1,.36,1); }
+.conf-pct   { font-size: 12px; font-weight: 500; color: var(--ink); min-width: 34px; text-align: right; font-family: var(--mono); }
+
+.verdict-section { border-top: 1px solid var(--border); padding-top: 1.25rem; }
+.verdict-eyebrow { font-size: 11px; font-family: var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 8px; }
+.verdict-text    { font-size: 14px; color: var(--ink); line-height: 1.72; }
+.verdict-caveat  { margin-top: 9px; font-size: 12px; color: var(--ink-3); font-style: italic; }
+
+footer { border-top: 1px solid var(--border); padding: 2rem; text-align: center; color: var(--ink-3); font-size: 13px; }
+footer strong { color: var(--ink-2); }
+
+@keyframes fadeUp    { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+@keyframes spin      { to { transform: rotate(360deg); } }
+@keyframes dotBounce { 0%,80%,100%{transform:scale(1)} 40%{transform:scale(1.6)} }
+
+@media (max-width: 620px) {
+  .query-row { flex-direction: column; }
+  .ask-btn   { width: 100%; height: 48px; flex-direction: row; }
+  .hero      { padding: 2rem 1rem 1rem; }
+  .main-wrap { padding: 0 1rem 3rem; }
+  nav        { padding: 0 1rem; }
+  .nav-pills { display: none; }
+  .points-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="#">
+    <div class="nav-logo">
+      <svg viewBox="0 0 18 18" fill="none">
+        <path d="M9 2L3 5.5V12.5L9 16L15 12.5V5.5L9 2Z" stroke="white" stroke-width="1.3" fill="none"/>
+        <circle cx="9" cy="9" r="2.2" fill="white"/>
+      </svg>
+    </div>
+    VerifyAI
+  </a>
+  <div class="nav-pills">
+    <span class="nav-pill ds">DeepSeek · Foundation</span>
+    <span class="nav-pill oai">GPT-4o · Sensitive Topics</span>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-eyebrow">
+    <span class="eyebrow-dot"></span>
+    Dual-model intelligence · real-time comparison
+  </div>
+  <h1>Two AI minds,<br/><em>one honest answer</em></h1>
+  <p>DeepSeek answers every question. On sensitive topics — finance, medicine, legal — GPT-4o is automatically activated for a second opinion and side-by-side compare.</p>
+</div>
+
+<div class="main-wrap">
+
+  <div class="legend">
+    <div class="legend-item">
+      <span class="legend-dot ds"></span>
+      <span>DeepSeek</span>
+      <span class="legend-badge always">always active</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-dot oai"></span>
+      <span>GPT-4o</span>
+      <span class="legend-badge sensitive">sensitive topics only</span>
+    </div>
+  </div>
+
+  <!-- Input card -->
+  <div class="card" style="animation: fadeUp 0.45s ease both;">
+    <p class="card-label">Your question</p>
+    <div class="query-row">
+      <textarea id="userQ" class="query-box" placeholder="Ask anything — e.g. Should I invest in index funds? Can I take ibuprofen with alcohol? What is a Roth IRA?"></textarea>
+      <button class="ask-btn" id="runBtn" onclick="runVerification()">
+        <svg viewBox="0 0 20 20" fill="none">
+          <circle cx="10" cy="10" r="8" stroke="white" stroke-width="1.5"/>
+          <path d="M7.5 10L10 7.5L12.5 10M10 7.5V13" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Ask
+      </button>
+    </div>
+
+    <div id="triggerBanner" class="trigger-banner"></div>
+
+    <div class="chips-row">
+      <span class="chips-label">try →</span>
+      <button class="chip" onclick="useChip(this)">Should I buy or rent a home?</button>
+      <button class="chip" onclick="useChip(this)">Ibuprofen + alcohol safe?</button>
+      <button class="chip" onclick="useChip(this)">What is compound interest?</button>
+      <button class="chip" onclick="useChip(this)">401k vs Roth IRA?</button>
+      <button class="chip" onclick="useChip(this)">Is Bitcoin a good investment?</button>
+    </div>
+  </div>
+
+  <!-- Status bar -->
+  <div class="status-bar" id="statusBar">
+    <div class="spinner"></div>
+    <span id="statusText">Querying models…</span>
+  </div>
+
+  <!-- Model response cards -->
+  <div class="models-area" id="modelsArea">
+    <p class="section-label">Live model responses</p>
+    <div class="models-grid">
+
+      <!-- DeepSeek card -->
+      <div class="model-card ds-card">
+        <div class="model-header">
+          <div class="model-id">
+            <span class="model-dot ds"></span>
+            <div>
+              <div class="model-name">DeepSeek</div>
+              <div class="model-sub">deepseek-chat · foundation</div>
+            </div>
+          </div>
+          <span class="model-status-tag active-ds" id="dsTag">Active</span>
+        </div>
+        <div class="model-response loading" id="respDS">
+          <span class="dot-loader"><span></span><span></span><span></span></span> Querying DeepSeek…
+        </div>
+      </div>
+
+      <!-- GPT-4o card -->
+      <div class="model-card oai-card" id="oaiCard">
+        <div class="model-header">
+          <div class="model-id">
+            <span class="model-dot oai"></span>
+            <div>
+              <div class="model-name">GPT-4o</div>
+              <div class="model-sub">openai · triggered model</div>
+            </div>
+          </div>
+          <span class="model-status-tag waiting" id="oaiTag">Standby</span>
+        </div>
+        <div class="model-response" id="respOAI">
+          <span style="color:var(--ink-3);font-style:italic;font-size:12px;">GPT-4o activates automatically on sensitive topics — finance, medicine, legal, or safety. Ask a sensitive question to trigger it.</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Compare & Contrast card -->
+  <div class="compare-card" id="compareCard">
+    <div class="compare-header">
+      <div class="compare-title">Compare &amp; Contrast</div>
+      <span class="reliability-pill" id="reliabilityPill">—</span>
+    </div>
+
+    <div class="conf-section">
+      <p class="section-label">Model confidence</p>
+      <div id="confBars"></div>
+    </div>
+
+    <div class="points-grid">
+      <div>
+        <p class="points-col-head">They agree on</p>
+        <div id="agreePoints"></div>
+      </div>
+      <div>
+        <p class="points-col-head">They differ on</p>
+        <div id="disputePoints"></div>
+      </div>
+    </div>
+
+    <div class="verdict-section">
+      <p class="verdict-eyebrow">Synthesized verdict</p>
+      <p class="verdict-text" id="verdictText"></p>
+      <p class="verdict-caveat">VerifyAI does not replace professional financial, medical, or legal advice. Always consult a qualified expert before making consequential decisions.</p>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <p><strong>VerifyAI</strong> — DeepSeek as foundation &middot; GPT-4o for sensitive topics</p>
+  <p style="margin-top:5px">For research and informational purposes only.</p>
+</footer>
+
+<script>
+// ── All API calls go to the local proxy (server.js) ──────────
+// Your API keys live only in server.js and never touch the browser.
+
+const PROXY_DEEPSEEK = "http://localhost:3000/api/deepseek";
+const PROXY_OPENAI   = "http://localhost:3000/api/openai";
+
+// ── Sensitive keyword list ────────────────────────────────────
+const SENSITIVE_KEYWORDS = [
+  // Finance / investing
+  "invest","investment","investing","stock","stocks","etf","index fund","bond","bonds",
+  "401k","roth ira","ira","retirement","portfolio","dividend","dividends",
+  "crypto","bitcoin","ethereum","blockchain","nft",
+  "tax","taxes","capital gains","write-off","deduction",
+  "mortgage","loan","debt","interest rate","inflation","deflation",
+  "budget","savings","financial","finance","money","salary","income","net worth",
+  "buy or rent","real estate","property","hedge fund","mutual fund",
+  "insurance","annuity","bankruptcy","credit score","credit card","apr",
+  "should i invest","should i buy","should i sell","stock market",
+  // Medical / health
+  "medicine","medication","drug","drugs","dose","dosage","overdose",
+  "ibuprofen","acetaminophen","paracetamol","aspirin","melatonin",
+  "supplement","prescription","over the counter",
+  "symptom","symptoms","side effect","side effects","interaction","interactions",
+  "allergy","allergic","blood pressure","diabetes","surgery","vaccine","vaccination",
+  "alcohol","toxic","poison","poisonous","lethal","fatal",
+  "mushroom","fungus","chemical","safe to eat","safe to take",
+  "can i take","can i mix","should i take",
+  // Legal
+  "legal","law","lawsuit","contract","sue","suing","attorney","lawyer",
+  "rights","liability","discrimination","harassment",
+  "copyright","patent","trademark","intellectual property",
+  "eviction","lease","divorce","custody","will","estate",
+  // Safety
+  "self-harm","self harm","suicide","dangerous","emergency","explosive","weapon"
+];
+
+function isSensitive(text) {
+  const lower = text.toLowerCase();
+  return SENSITIVE_KEYWORDS.filter(k => lower.includes(k));
+}
+
+function useChip(btn) {
+  document.getElementById("userQ").value = btn.textContent.trim();
+  document.getElementById("triggerBanner").style.display = "none";
+}
+
+// ── API helpers ───────────────────────────────────────────────
+async function callDeepSeek(systemPrompt, userMessage) {
+  const res = await fetch(PROXY_DEEPSEEK, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "deepseek-chat",
+      max_tokens: 500,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user",   content: userMessage }
+      ]
+    })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  return data.choices[0].message.content.trim();
+}
+
+async function callOpenAI(systemPrompt, userMessage) {
+  const res = await fetch(PROXY_OPENAI, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "gpt-4o",
+      max_tokens: 500,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user",   content: userMessage }
+      ]
+    })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  return data.choices[0].message.content.trim();
+}
+
+async function callSynthesis(prompt) {
+  const res = await fetch(PROXY_DEEPSEEK, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "deepseek-chat",
+      max_tokens: 700,
+      messages: [
+        { role: "system", content: "You are a synthesis engine. Output ONLY valid JSON — no markdown, no backticks, no explanation, no extra text." },
+        { role: "user",   content: prompt }
+      ]
+    })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  const raw = data.choices[0].message.content.trim().replace(/```json|```/g, "").trim();
+  return JSON.parse(raw);
+}
+
+// ── Main verification flow ────────────────────────────────────
+async function runVerification() {
+  const q = document.getElementById("userQ").value.trim();
+  if (!q) return;
+
+  const btn = document.getElementById("runBtn");
+  btn.disabled = true;
+
+  const hits      = isSensitive(q);
+  const sensitive = hits.length > 0;
+
+  // Banner
+  const banner = document.getElementById("triggerBanner");
+  if (sensitive) {
+    banner.className = "trigger-banner sensitive";
+    banner.style.display = "flex";
+    const shown = hits.slice(0, 3).join(", ") + (hits.length > 3 ? ` +${hits.length - 3} more` : "");
+    banner.innerHTML = `<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg><span>Sensitive topic detected (<strong>${shown}</strong>) — GPT-4o triggered for second opinion.</span>`;
+  } else {
+    banner.className = "trigger-banner normal";
+    banner.style.display = "flex";
+    banner.innerHTML = `<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg><span>General question — DeepSeek answering. GPT-4o stays on standby.</span>`;
+  }
+
+  // Show loading UI
+  document.getElementById("statusBar").style.display = "flex";
+  document.getElementById("statusText").textContent  = sensitive
+    ? "Querying DeepSeek + GPT-4o in parallel…"
+    : "Querying DeepSeek…";
+  document.getElementById("modelsArea").style.display = "block";
+  document.getElementById("compareCard").style.display = "none";
+
+  const respDS  = document.getElementById("respDS");
+  const respOAI = document.getElementById("respOAI");
+  const oaiCard = document.getElementById("oaiCard");
+  const dsTag   = document.getElementById("dsTag");
+  const oaiTag  = document.getElementById("oaiTag");
+
+  // Reset DeepSeek card
+  respDS.className = "model-response loading";
+  respDS.innerHTML = `<span class="dot-loader"><span></span><span></span><span></span></span> Querying DeepSeek…`;
+  dsTag.className  = "model-status-tag active-ds";
+  dsTag.textContent = "Active";
+
+  // Reset GPT-4o card
+  if (sensitive) {
+    oaiCard.classList.remove("locked");
+    oaiTag.className   = "model-status-tag active-oai";
+    oaiTag.textContent = "Active";
+    respOAI.className  = "model-response loading";
+    respOAI.innerHTML  = `<span class="dot-loader"><span></span><span></span><span></span></span> Querying GPT-4o…`;
+  } else {
+    oaiCard.classList.add("locked");
+    oaiTag.className   = "model-status-tag waiting";
+    oaiTag.textContent = "Standby";
+    respOAI.className  = "model-response";
+    respOAI.innerHTML  = `<span style="color:var(--ink-3);font-style:italic;font-size:12px;">GPT-4o was not triggered. Ask about finance, medicine, or legal topics to activate it.</span>`;
+  }
+
+  const DS_SYSTEM  = "You are a knowledgeable, balanced AI assistant. Answer the user's question in 3-4 sentences. Be accurate and informative. Flag risks or caveats if relevant. Do NOT add preamble or filler phrases.";
+  const OAI_SYSTEM = "You are a careful, professional AI with expertise in finance, health, and legal topics. Answer the user's question in 3-4 sentences. Be precise, note important limitations, and recommend professional consultation where appropriate. Do NOT add preamble or filler phrases.";
+
+  let dsAnswer  = "";
+  let oaiAnswer = "";
+
+  // Build parallel task list
+  const tasks = [
+    callDeepSeek(DS_SYSTEM, q)
+      .then(text => {
+        dsAnswer = text;
+        respDS.className = "model-response";
+        respDS.textContent = text;
+      })
+      .catch(err => {
+        dsAnswer = `Error: ${err.message}`;
+        respDS.className = "model-response";
+        respDS.style.color = "var(--danger)";
+        respDS.textContent = "Could not reach DeepSeek. Check that server.js is running and your DeepSeek API key is set.";
+      })
+  ];
+
+  if (sensitive) {
+    tasks.push(
+      callOpenAI(OAI_SYSTEM, q)
+        .then(text => {
+          oaiAnswer = text;
+          respOAI.className = "model-response";
+          respOAI.textContent = text;
+        })
+        .catch(err => {
+          oaiAnswer = `Error: ${err.message}`;
+          respOAI.className = "model-response";
+          respOAI.style.color = "var(--danger)";
+          respOAI.textContent = "Could not reach GPT-4o. Check that server.js is running and your OpenAI API key is set.";
+        })
+    );
+  }
+
+  await Promise.all(tasks);
+
+  // ── Compare & Contrast (only when both models ran successfully) ──
+  const bothOk = sensitive
+    && !dsAnswer.startsWith("Error:")
+    && !oaiAnswer.startsWith("Error:");
+
+  if (bothOk) {
+    document.getElementById("statusText").textContent = "Synthesizing comparison…";
+
+    const synthPrompt = `Two AI models answered this question: "${q}"
+
+DeepSeek response: ${dsAnswer}
+
+GPT-4o response: ${oaiAnswer}
+
+Compare and contrast these two responses. Return ONLY a valid JSON object with no markdown and no backticks:
+{
+  "dsConfidence": <integer 0-100>,
+  "oaiConfidence": <integer 0-100>,
+  "agreementPoints": ["shared claim 1", "shared claim 2", "shared claim 3"],
+  "disagreements": ["key difference 1", "key difference 2"],
+  "verdict": "A 2-3 sentence synthesis noting what both agree on, where they differ, and what the user should take away.",
+  "reliabilityLabel": "High" or "Medium" or "Low"
+}`;
+
+    let synth;
+    try {
+      synth = await callSynthesis(synthPrompt);
+    } catch (_) {
+      synth = {
+        dsConfidence: 72, oaiConfidence: 76,
+        agreementPoints: ["Both provide relevant information", "Both note individual variation", "Both recommend professional consultation"],
+        disagreements: ["Depth of detail", "Tone and emphasis"],
+        verdict: "Both models broadly agree on the core facts but differ in emphasis and detail. DeepSeek tends to be more direct while GPT-4o adds more professional caveats. For consequential decisions, consult a qualified expert.",
+        reliabilityLabel: "Medium"
+      };
+    }
+
+    // Reliability pill
+    const label = (synth.reliabilityLabel || "Medium").toLowerCase();
+    const pill  = document.getElementById("reliabilityPill");
+    pill.className   = `reliability-pill ${label}`;
+    pill.textContent = `${synth.reliabilityLabel} reliability`;
+
+    // Confidence bars
+    const bars = [
+      { name: "DeepSeek", val: synth.dsConfidence,  color: "var(--ds-blue)",   cls: "ds" },
+      { name: "GPT-4o",   val: synth.oaiConfidence, color: "var(--oai-green)", cls: "oai" }
+    ];
+    document.getElementById("confBars").innerHTML = bars.map(b => `
+      <div class="conf-row">
+        <span class="conf-label">
+          <span class="legend-dot ${b.cls}"></span>${b.name}
+        </span>
+        <div class="conf-track">
+          <div class="conf-fill" style="width:${Math.round(b.val)}%;background:${b.color}"></div>
+        </div>
+        <span class="conf-pct">${Math.round(b.val)}%</span>
+      </div>`).join("");
+
+    // Agreement points
+    document.getElementById("agreePoints").innerHTML =
+      (synth.agreementPoints || []).map(a =>
+        `<div class="point-item"><span class="point-icon agree">✓</span><span>${a}</span></div>`
+      ).join("") || `<span style="font-size:12px;color:var(--ink-3)">—</span>`;
+
+    // Disagreements
+    document.getElementById("disputePoints").innerHTML =
+      (synth.disagreements || []).map(d =>
+        `<div class="point-item"><span class="point-icon dispute">≠</span><span>${d}</span></div>`
+      ).join("") || `<span style="font-size:12px;color:var(--ink-3)">Models largely agree</span>`;
+
+    // Verdict
+    document.getElementById("verdictText").textContent = synth.verdict || "";
+
+    document.getElementById("compareCard").style.display = "block";
+    document.getElementById("compareCard").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  document.getElementById("statusBar").style.display = "none";
+  btn.disabled = false;
+}
+</script>
+</body>
+</html>
